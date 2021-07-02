@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <micro_ros_arduino.h>
 
 extern "C"
 {
@@ -7,10 +8,6 @@ extern "C"
   #include <sys/time.h>
 
   int clock_gettime(clockid_t unused, struct timespec *tp) __attribute__ ((weak));
-  bool arduino_transport_open(struct uxrCustomTransport * transport) __attribute__ ((weak));
-  bool arduino_transport_close(struct uxrCustomTransport * transport) __attribute__ ((weak));
-  size_t arduino_transport_write(struct uxrCustomTransport * transport, uint8_t *buf, size_t len, uint8_t *errcode) __attribute__ ((weak));
-  size_t arduino_transport_read(struct uxrCustomTransport * transport, uint8_t *buf, size_t len, int timeout, uint8_t *errcode) __attribute__ ((weak));
 
   #define micro_rollover_useconds 4294967295
 
@@ -36,18 +33,29 @@ extern "C"
 
   bool arduino_transport_open(struct uxrCustomTransport * transport)
   {
+    if (transport->args != NULL) {
+      //((Stream*)(transport->args))->begin(115200);
+      return true;
+    }
     Serial.begin(115200);
     return true;
   }
 
   bool arduino_transport_close(struct uxrCustomTransport * transport)
   {
+    if (transport->args != NULL) {
+      //((Stream*)(transport->args))->end();
+      return true;
+    }
     Serial.end();
     return true;
   }
 
-  size_t arduino_transport_write(struct uxrCustomTransport * transport, uint8_t *buf, size_t len, uint8_t *errcode)
+  size_t arduino_transport_write(struct uxrCustomTransport * transport, const uint8_t *buf, size_t len, uint8_t *errcode)
   {
+    if (transport->args != NULL) {
+      return ((Stream*)(transport->args))->write(buf, len);
+    }
     (void)errcode;
     size_t sent = Serial.write(buf, len);
     return sent;
@@ -55,6 +63,9 @@ extern "C"
 
   size_t arduino_transport_read(struct uxrCustomTransport * transport, uint8_t *buf, size_t len, int timeout, uint8_t *errcode)
   {
+    if (transport->args != NULL) {
+      return ((Stream*)(transport->args))->readBytes((char*)buf, len);
+    }
     (void)errcode;
     Serial.setTimeout(timeout);
     return Serial.readBytes((char *)buf, len);

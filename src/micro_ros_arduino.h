@@ -32,6 +32,17 @@ static inline void set_microros_transports(){
 	);
 }
 
+static inline void set_microros_stream_transports(Stream& _stream){
+	rmw_uros_set_custom_transport(
+		true,
+		(void*)&_stream,
+		arduino_transport_open,
+		arduino_transport_close,
+		arduino_transport_write,
+		arduino_transport_read
+	);
+}
+
 #if defined(TARGET_PORTENTA_H7_M7) || defined(ARDUINO_NANO_RP2040_CONNECT)
 
 #if defined(TARGET_PORTENTA_H7_M7)
